@@ -1,0 +1,9 @@
+{
+  "name": "NGO Grant Reporting Machine",
+  "description": "A professional high-performance dashboard for field officers to generate grant reports using field notes and audio recordings, integrated with Dify.ai workflows.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
