@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { DonorType, WorkflowInputs, AppState, User, HistoryItem, ReportStyle } from './types.ts';
 import { runGrantWorkflow } from './services/difyService.ts';
 import { ICONS, APP_NAME, DISCLAIMER_TEXT } from './constants.tsx';
@@ -21,10 +21,17 @@ const App: React.FC = () => {
     return (saved as 'light' | 'dark') || 'light';
   });
 
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Restore user session from localStorage on mount
+  const savedUser = (() => {
+    try { const u = localStorage.getItem('ngo_session_user'); return u ? JSON.parse(u) : null; } catch { return null; }
+  })();
+
   const [state, setState] = useState<AppState & { currentTaskId?: string | null }>(() => {
     const savedHistory = localStorage.getItem('grant_machine_history');
     return {
-      user: null, 
+      user: savedUser,
       isProcessing: false,
       isRecording: false,
       liveTranscription: '',
@@ -70,6 +77,34 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('app_theme', theme);
   }, [theme]);
+
+  // Persist user session
+  useEffect(() => {
+    if (state.user) {
+      localStorage.setItem('ngo_session_user', JSON.stringify(state.user));
+    } else {
+      localStorage.removeItem('ngo_session_user');
+    }
+  }, [state.user]);
+
+  // Close mobile menu on outside click
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target as Node)) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    if (isMobileMenuOpen) document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [isMobileMenuOpen]);
+
+  // Time-based greeting
+  const getGreeting = useCallback(() => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  }, []);
 
   useEffect(() => {
     const draftToSave = { ...inputs };
@@ -260,8 +295,18 @@ const App: React.FC = () => {
     setIsEditingReport(false);
   };
 
+  const handleLogin = (user: any) => {
+    localStorage.setItem('ngo_session_user', JSON.stringify(user));
+    setState(prev => ({ ...prev, user }));
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('ngo_session_user');
+    setState(prev => ({ ...prev, user: null }));
+  };
+
   if (!state.user) {
-    return <LoginScreen onLogin={(user) => setState(prev => ({ ...prev, user }))} />;
+    return <LoginScreen onLogin={handleLogin} />;
   }
 
   const isInputValid = inputs.field_notes_text.trim().length > 0 || inputs.field_notes_voice !== null || inputs.field_notes_file !== null;
@@ -273,46 +318,52 @@ const App: React.FC = () => {
   return (
     <div className={`h-[100dvh] w-full flex flex-col transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-900 text-slate-100 dark' : 'bg-slate-50 text-slate-900'} overflow-hidden touch-none sm:touch-auto`}>
       {/* Universal Header */}
-      <header className={`flex-shrink-0 px-4 sm:px-6 py-4 backdrop-blur-lg border-b ${theme === 'dark' ? 'bg-slate-800/60 border-slate-700' : 'bg-white/60 border-slate-200'} flex justify-between items-center z-20 transition-all`}>
-        <div className="flex items-center gap-2 sm:gap-3">
+      <header className={`flex-shrink-0 px-4 sm:px-6 py-3 backdrop-blur-lg border-b ${theme === 'dark' ? 'bg-slate-800/60 border-slate-700' : 'bg-white/60 border-slate-200'} flex justify-between items-center z-20 transition-all`}>
+        <button
+          onClick={() => setState(prev => ({ ...prev, step: 'input' }))}
+          className="flex items-center gap-2 sm:gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+        >
           <div className="p-1.5 sm:p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-200">
-            <ICONS.Globe className="text-white w-5 h-5 sm:w-6 sm:h-6" />
+            <img src="/web_icon.png" alt="Logo" className="w-5 h-5 sm:w-6 sm:h-6 object-contain brightness-0 invert" />
           </div>
-          <div>
-            <h1 className={`text-lg sm:text-xl font-bold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} tracking-tight leading-none mb-0.5`}>{APP_NAME}</h1>
+          <div className="text-left">
+            <h1 className={`hidden sm:block text-lg sm:text-xl font-bold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} tracking-tight leading-none mb-0.5`}>{APP_NAME}</h1>
+            <p className={`sm:hidden text-xs font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} leading-none`}>{getGreeting()}, {state.user.name.split(' ')[0]}!</p>
             <span className="text-[8px] sm:text-[9px] text-blue-500 font-bold uppercase tracking-widest">Enterprise Reporting Hub</span>
           </div>
-        </div>
+        </button>
         
         <div className="flex items-center gap-2 sm:gap-4">
-          <div className="flex flex-col text-right">
-            <span className={`text-[11px] sm:text-xs font-bold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{state.user.name}</span>
-            <span className="text-[8px] sm:text-[10px] text-slate-400 uppercase tracking-widest">{state.user.role}</span>
+          <div className="hidden sm:flex flex-col text-right">
+            <span className={`text-xs font-bold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{state.user.name}</span>
+            <span className="text-[10px] text-slate-400 uppercase tracking-widest">{state.user.role}</span>
           </div>
-          <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full border ${theme === 'dark' ? 'border-slate-700 bg-slate-700' : 'border-slate-200 bg-slate-100'} overflow-hidden flex items-center justify-center`}>
-             <ICONS.Users className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
+          <div className={`hidden sm:flex w-9 h-9 rounded-full border ${theme === 'dark' ? 'border-slate-700 bg-slate-700' : 'border-slate-200 bg-slate-100'} overflow-hidden items-center justify-center`}>
+             <ICONS.Users className="w-5 h-5 text-slate-400" />
           </div>
-          <div className="flex items-center gap-1 ml-2">
+          <div className="flex items-center gap-1">
+            {/* Desktop: theme + logout */}
             <button 
               onClick={toggleTheme} 
-              className={`p-1.5 sm:p-2 rounded-lg transition-colors ${theme === 'dark' ? 'hover:bg-slate-700 text-yellow-400' : 'hover:bg-slate-200 text-slate-500'}`}
+              className={`hidden sm:block p-1.5 sm:p-2 rounded-lg transition-colors ${theme === 'dark' ? 'hover:bg-slate-700 text-yellow-400' : 'hover:bg-slate-200 text-slate-500'}`}
               title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
             >
               {theme === 'light' ? <ICONS.Moon className="w-4 h-4 sm:w-5 sm:h-5" /> : <ICONS.Sun className="w-4 h-4 sm:w-5 sm:h-5" />}
             </button>
             <button 
-              onClick={() => setState(prev => ({ ...prev, user: null }))} 
+              onClick={handleLogout} 
               className={`hidden sm:block p-1.5 sm:p-2 hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors rounded-lg`}
               title="Logout"
             >
               <ICONS.LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
+            {/* Mobile: hamburger */}
             <button 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-              className={`sm:hidden p-1.5 sm:p-2 hover:bg-slate-200 text-slate-400 transition-colors rounded-lg`}
+              className={`sm:hidden p-1.5 rounded-lg transition-colors ${theme === 'dark' ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-500'}`}
               title="Menu"
             >
-              <ICONS.Menu className="w-4 h-4 sm:w-5 sm:h-5" />
+              <ICONS.Menu className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -320,46 +371,58 @@ const App: React.FC = () => {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="sm:hidden absolute top-[60px] right-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl z-[60] overflow-hidden animate-in slide-in-from-top-2">
+        <div ref={mobileMenuRef} className={`sm:hidden absolute top-[56px] right-2 w-56 rounded-2xl shadow-2xl z-[60] overflow-hidden animate-in slide-in-from-top-2 border ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
           <div className="flex flex-col py-2">
-            <button 
-              onClick={() => { setState(prev => ({ ...prev, step: 'history' })); setIsMobileMenuOpen(false); }} 
-              className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
-            >
-              <ICONS.History className="w-4 h-4" /> Archives
-            </button>
-            {canViewAudit && (
-              <button 
-                onClick={() => { setState(prev => ({ ...prev, step: 'audit' })); setIsMobileMenuOpen(false); }} 
-                className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+            {/* User info row */}
+            <div className={`px-4 py-3 border-b ${theme === 'dark' ? 'border-slate-700' : 'border-slate-100'}`}>
+              <p className={`text-xs font-bold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{state.user.name}</p>
+              <p className="text-[10px] text-slate-400 uppercase tracking-wider">{state.user.role}</p>
+            </div>
+
+            {/* Nav items */}
+            {[
+              { label: 'Archives', icon: <ICONS.History className="w-4 h-4" />, step: 'history', show: true },
+              { label: 'Audit', icon: <ICONS.MessageSquare className="w-4 h-4" />, step: 'audit', show: canViewAudit },
+              { label: 'My Profile', icon: <ICONS.UserIcon className="w-4 h-4" />, step: 'profile', show: true },
+              { label: 'Identity', icon: <ICONS.Lock className="w-4 h-4" />, step: 'admin', show: isSysAdmin },
+            ].filter(i => i.show).map(item => (
+              <button
+                key={item.label}
+                onClick={() => { setState(prev => ({ ...prev, step: item.step as any })); setIsMobileMenuOpen(false); }}
+                className={`flex items-center gap-3 px-4 py-3 text-sm font-bold transition-colors ${
+                  state.step === item.step
+                    ? 'text-blue-600 bg-blue-50'
+                    : theme === 'dark' ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-50'
+                }`}
               >
-                <ICONS.MessageSquare className="w-4 h-4" /> Audit
+                {item.icon} {item.label}
               </button>
-            )}
-            <button 
-              onClick={() => { setState(prev => ({ ...prev, step: 'profile' })); setIsMobileMenuOpen(false); }} 
-              className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
-            >
-              <ICONS.UserIcon className="w-4 h-4" /> My Profile
-            </button>
-            {isSysAdmin && (
-              <button 
-                onClick={() => { setState(prev => ({ ...prev, step: 'admin' })); setIsMobileMenuOpen(false); }} 
-                className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
-              >
-                <ICONS.Lock className="w-4 h-4" /> Identity
-              </button>
-            )}
+            ))}
+
             <button 
               onClick={() => { document.getElementById('feedback-toggle-btn')?.click(); setIsMobileMenuOpen(false); }} 
-              className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+              className={`flex items-center gap-3 px-4 py-3 text-sm font-bold transition-colors ${theme === 'dark' ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-50'}`}
             >
               <ICONS.MessageSquare className="w-4 h-4" /> Feedback
             </button>
-            <div className="border-t border-slate-100 dark:border-slate-700 my-1"></div>
+
+            {/* Dark mode toggle */}
+            <div className={`flex items-center justify-between px-4 py-3 border-t ${theme === 'dark' ? 'border-slate-700' : 'border-slate-100'}`}>
+              <span className={`text-sm font-bold ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+                {theme === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+              </span>
+              <button
+                onClick={toggleTheme}
+                className={`relative w-10 h-5 rounded-full transition-colors duration-300 ${theme === 'dark' ? 'bg-blue-600' : 'bg-slate-300'}`}
+              >
+                <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-300 ${theme === 'dark' ? 'translate-x-5' : 'translate-x-0'}`} />
+              </button>
+            </div>
+
+            <div className={`border-t my-1 ${theme === 'dark' ? 'border-slate-700' : 'border-slate-100'}`}></div>
             <button 
-              onClick={() => setState(prev => ({ ...prev, user: null }))} 
-              className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+              onClick={() => { setIsMobileMenuOpen(false); handleLogout(); }} 
+              className={`flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-600 ${theme === 'dark' ? 'hover:bg-red-900/20' : 'hover:bg-red-50'}`}
             >
               <ICONS.LogOut className="w-4 h-4" /> Log out
             </button>
@@ -368,8 +431,10 @@ const App: React.FC = () => {
       )}
 
       <main className="flex-grow flex flex-col lg:flex-row overflow-hidden relative">
-        {/* Widened Sidebar Area - Fixed Width lg:w-[34rem] */}
-        <aside className={`w-full lg:w-[34rem] flex-shrink-0 flex flex-col p-4 gap-4 ${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-100/50 border-slate-200'} border-r overflow-y-auto max-h-[40vh] lg:max-h-none lg:h-full scrollbar-thin`}>
+        {/* Sidebar: hidden on mobile when browsing sub-pages */}
+        <aside className={`${
+          !isReportingActive ? 'hidden lg:flex' : 'flex'
+        } w-full lg:w-[34rem] flex-shrink-0 flex-col p-4 gap-4 ${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-100/50 border-slate-200'} border-r overflow-y-auto max-h-[40vh] lg:max-h-none lg:h-full scrollbar-thin`}>
           <div className={`rounded-2xl p-1 shadow-sm border ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200/60'} flex-shrink-0`}>
             <button 
               onClick={() => setState(prev => ({ ...prev, step: 'input' }))} 
@@ -645,9 +710,8 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* We only show feedback in desktop globally, or if step is result in mobile. 
-          Actually, the widget itself is fixed. We can conditionally hide it on mobile unless in report. */}
-      <div className={`fixed bottom-6 right-6 z-[100] ${(!isReportingActive || state.step === 'input') ? 'hidden sm:block' : ''}`}>
+      {/* Feedback widget — always rendered so mobile menu can trigger it */}
+      <div className="fixed bottom-6 right-6 z-[100]">
         <ContextualFeedbackWidget 
           user={state.user}
           context={{

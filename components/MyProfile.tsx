@@ -149,7 +149,7 @@ export const MyProfile: React.FC<MyProfileProps> = ({ user, onUpdateUser }) => {
         </div>
 
         {/* Password Update Form */}
-        <div className="glass p-6 rounded-2xl border border-slate-200/60 bg-white/50 shadow-sm max-w-md">
+        <div className="glass p-4 sm:p-6 rounded-2xl border border-slate-200/60 bg-white/50 shadow-sm w-full max-w-lg">
           <h4 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
             <ICONS.Lock className="w-4 h-4 text-blue-500" /> Update Password
           </h4>

@@ -112,13 +112,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           <div className="inline-flex p-2 bg-white rounded-3xl shadow-2xl shadow-blue-200 mb-6 animate-float border border-slate-100">
             <img src="/web_icon.png" alt="Logo" className="w-12 h-12 object-contain" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-800 mb-2 tracking-tight">{APP_NAME}</h1>
+          <h1 className="text-3xl text-slate-800 mb-2 tracking-tight" style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>{APP_NAME}</h1>
           <p className="text-slate-500 font-light px-8 text-sm italic">High-performance Intelligence Dashboard</p>
         </div>
 
         <div className="glass rounded-3xl p-10 shadow-2xl shadow-blue-900/5 space-y-8 border border-white/60">
           <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold text-slate-800">Welcome back</h2>
+            <h2 className="text-2xl text-slate-800" style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>Welcome back</h2>
             <p className="text-slate-400 text-sm">Enter your credentials to access the system</p>
           </div>
 
@@ -185,8 +185,22 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           </div>
         </div>
 
-        <p className="text-[10px] text-center text-slate-400 mt-8 leading-relaxed italic uppercase tracking-wider">
-          Authorized personnel only • NGO-SECURE v4.2
+        <p className="text-[10px] text-center text-slate-400 mt-8 leading-relaxed uppercase tracking-wider">
+          Authorized personnel only
+        </p>
+        <p className="text-[11px] text-center text-slate-400 mt-2 flex items-center justify-center gap-1">
+          Built by{' '}
+          <a
+            href="https://crane-systems.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:text-blue-700 font-semibold transition-colors underline underline-offset-2 flex items-center gap-0.5"
+          >
+            Crane Systems
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
         </p>
       </div>
     </div>
