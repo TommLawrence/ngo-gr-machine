@@ -316,19 +316,19 @@ const App: React.FC = () => {
   const isReportingActive = state.step !== 'history' && state.step !== 'admin' && state.step !== 'audit' && state.step !== 'profile';
 
   return (
-    <div className={`h-[100dvh] w-full flex flex-col transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-900 text-slate-100 dark' : 'bg-slate-50 text-slate-900'} overflow-hidden touch-none sm:touch-auto`}>
+    <div className={`h-[100dvh] w-full flex flex-col transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-900 text-slate-100 dark' : 'bg-slate-50 text-slate-900'} overflow-hidden`}>
       {/* Universal Header */}
       <header className={`flex-shrink-0 px-4 sm:px-6 py-3 backdrop-blur-lg border-b ${theme === 'dark' ? 'bg-slate-800/60 border-slate-700' : 'bg-white/60 border-slate-200'} flex justify-between items-center z-20 transition-all`}>
         <button
           onClick={() => setState(prev => ({ ...prev, step: 'input' }))}
           className="flex items-center gap-2 sm:gap-3 cursor-pointer hover:opacity-80 transition-opacity"
         >
-          <div className="p-1.5 sm:p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-200">
-            <img src="/web_icon.png" alt="Logo" className="w-5 h-5 sm:w-6 sm:h-6 object-contain brightness-0 invert" />
+          <div className="p-1.5 sm:p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-200 flex-shrink-0">
+            <img src="/web_icon.png" alt="Logo" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
           </div>
           <div className="text-left">
             <h1 className={`hidden sm:block text-lg sm:text-xl font-bold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} tracking-tight leading-none mb-0.5`}>{APP_NAME}</h1>
-            <p className={`sm:hidden text-xs font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} leading-none`}>{getGreeting()}, {state.user.name.split(' ')[0]}!</p>
+            <p className={`sm:hidden text-xs font-bold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} leading-none`}>{getGreeting()}, {state.user.name.split(' ')[0]}!</p>
             <span className="text-[8px] sm:text-[9px] text-blue-500 font-bold uppercase tracking-widest">Enterprise Reporting Hub</span>
           </div>
         </button>
@@ -433,8 +433,10 @@ const App: React.FC = () => {
       <main className="flex-grow flex flex-col lg:flex-row overflow-hidden relative">
         {/* Sidebar: hidden on mobile when browsing sub-pages */}
         <aside className={`${
-          !isReportingActive ? 'hidden lg:flex' : 'flex'
-        } w-full lg:w-[34rem] flex-shrink-0 flex-col p-4 gap-4 ${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-100/50 border-slate-200'} border-r overflow-y-auto max-h-[40vh] lg:max-h-none lg:h-full scrollbar-thin`}>
+          !isReportingActive ? 'hidden lg:flex'
+          : state.step === 'input' ? 'flex flex-grow lg:flex-grow-0'
+          : 'flex'
+        } w-full lg:w-[34rem] flex-shrink-0 flex-col p-4 gap-4 ${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-100/50 border-slate-200'} border-r overflow-y-auto ${state.step === 'input' ? 'max-h-none' : 'max-h-[40vh]'} lg:max-h-none lg:h-full scrollbar-thin`}>
           <div className={`rounded-2xl p-1 shadow-sm border ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200/60'} flex-shrink-0`}>
             <button 
               onClick={() => setState(prev => ({ ...prev, step: 'input' }))} 
@@ -558,8 +560,10 @@ const App: React.FC = () => {
           </div>
         </aside>
 
-        {/* Dynamic Main Content Pane */}
-        <div className="flex-grow flex flex-col p-4 sm:p-6 overflow-hidden relative min-h-0">
+        {/* Dynamic Main Content Pane: hidden on mobile during input step */}
+        <div className={`${
+          state.step === 'input' ? 'hidden sm:flex' : 'flex'
+        } flex-grow flex-col p-4 sm:p-6 overflow-hidden relative min-h-0`}>
           
           <nav className={`hidden sm:flex flex-shrink-0 items-center gap-1.5 mb-6 ${theme === 'dark' ? 'bg-slate-800/40' : 'bg-slate-200/40'} p-1 rounded-2xl w-fit overflow-x-auto no-scrollbar scroll-smooth`}>
             <button 
@@ -710,8 +714,8 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Feedback widget — always rendered so mobile menu can trigger it */}
-      <div className="fixed bottom-6 right-6 z-[100]">
+      {/* Feedback widget: always on desktop, hidden on mobile during input step */}
+      <div className={`fixed bottom-6 right-6 z-[100] ${state.step === 'input' ? 'hidden sm:block' : 'block'}`}>
         <ContextualFeedbackWidget 
           user={state.user}
           context={{
