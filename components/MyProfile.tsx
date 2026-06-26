@@ -7,9 +7,10 @@ import { getCroppedImg } from '../utils/cropImage.ts';
 interface MyProfileProps {
   user: User;
   onUpdateUser: (updatedUser: User) => void;
+  theme?: 'light' | 'dark';
 }
 
-export const MyProfile: React.FC<MyProfileProps> = ({ user, onUpdateUser }) => {
+export const MyProfile: React.FC<MyProfileProps> = ({ user, onUpdateUser, theme = 'light' }) => {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -121,100 +122,128 @@ export const MyProfile: React.FC<MyProfileProps> = ({ user, onUpdateUser }) => {
 
       <div className="flex-grow overflow-y-auto min-h-0 space-y-8 pb-10">
         {/* Profile Card */}
-        <div className="glass p-6 rounded-2xl border border-slate-200/60 bg-white/50 shadow-sm flex flex-col md:flex-row gap-6 items-center md:items-start">
+        <div className={`p-5 sm:p-6 rounded-2xl border flex flex-col md:flex-row gap-5 items-center md:items-start transition-colors ${
+          theme === 'dark'
+            ? 'bg-slate-800 border-slate-700'
+            : 'bg-white border-slate-200/80'
+        }`}>
           <div className="flex-shrink-0 relative group">
-            <div className="w-24 h-24 rounded-full border-4 border-white shadow-lg overflow-hidden bg-slate-100 flex items-center justify-center">
+            <div className={`w-24 h-24 rounded-full border-4 overflow-hidden flex items-center justify-center ${
+              theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-white bg-slate-100'
+            }`}>
               {user.avatar ? (
                 <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
               ) : (
-                <ICONS.UserIcon className="w-10 h-10 text-slate-300" />
+                <ICONS.UserIcon className={`w-10 h-10 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-300'}`} />
               )}
             </div>
-            <label className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 group-hover:opacity-100 cursor-pointer rounded-full transition-opacity">
+            <label className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 cursor-pointer rounded-full transition-opacity">
               <ICONS.Edit className="w-5 h-5" />
               <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
             </label>
           </div>
           
-          <div className="flex-grow space-y-3 text-center md:text-left">
+          <div className="flex-grow space-y-2 text-center md:text-left">
             <div>
-              <h3 className="text-xl font-bold text-slate-800">{user.name}</h3>
-              <p className="text-sm text-slate-500 font-medium">{user.role}</p>
+              <h3 className={`text-xl font-bold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{user.name}</h3>
+              <p className={`text-sm font-semibold uppercase tracking-wider text-[10px] mt-0.5 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>{user.role}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-xs text-slate-400 font-medium"><strong>Email:</strong> {user.email}</p>
-              <p className="text-xs text-slate-400 font-medium"><strong>User ID:</strong> {user.id}</p>
+              <p className={`text-xs font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}><span className={`font-bold ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>Email:</span> {user.email}</p>
+              <p className={`text-xs font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}><span className={`font-bold ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>User ID:</span> {user.id}</p>
             </div>
           </div>
         </div>
 
         {/* Password Update Form */}
-        <div className="glass p-4 sm:p-6 rounded-2xl border border-slate-200/60 bg-white/50 shadow-sm w-full max-w-lg">
-          <h4 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+        <div className={`p-4 sm:p-6 rounded-2xl border w-full transition-colors ${
+          theme === 'dark'
+            ? 'bg-slate-800 border-slate-700'
+            : 'bg-white border-slate-200/80'
+        }`}>
+          <h4 className={`text-sm font-bold mb-4 flex items-center gap-2 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
             <ICONS.Lock className="w-4 h-4 text-blue-500" /> Update Password
           </h4>
           
           <form onSubmit={handlePasswordUpdate} className="space-y-4">
             <div>
-              <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-1.5 ml-1">Old Password</label>
+              <label className={`block text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Old Password</label>
               <input 
                 type="password" 
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
                 required
-                className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 border-slate-200 bg-white text-slate-700"
+                className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors ${
+                  theme === 'dark'
+                    ? 'bg-slate-900 border-slate-600 text-slate-100 placeholder-slate-500'
+                    : 'bg-slate-50 border-slate-200 text-slate-800'
+                }`}
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-1.5 ml-1">New Password</label>
-              <div className="relative group">
+              <label className={`block text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>New Password</label>
+              <div className="relative">
                 <input 
                   type={showNewPassword ? "text" : "password"} 
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  className="w-full border rounded-xl px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 border-slate-200 bg-white text-slate-700"
+                  className={`w-full border rounded-xl px-3 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors ${
+                    theme === 'dark'
+                      ? 'bg-slate-900 border-slate-600 text-slate-100 placeholder-slate-500'
+                      : 'bg-slate-50 border-slate-200 text-slate-800'
+                  }`}
                 />
                 <button 
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${theme === 'dark' ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600'}`}
                 >
                   {showNewPassword ? <ICONS.EyeOff className="w-4 h-4" /> : <ICONS.Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-1.5 ml-1">Confirm New Password</label>
-              <div className="relative group">
+              <label className={`block text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Confirm New Password</label>
+              <div className="relative">
                 <input 
                   type={showConfirmPassword ? "text" : "password"} 
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  className="w-full border rounded-xl px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 border-slate-200 bg-white text-slate-700"
+                  className={`w-full border rounded-xl px-3 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors ${
+                    theme === 'dark'
+                      ? 'bg-slate-900 border-slate-600 text-slate-100 placeholder-slate-500'
+                      : 'bg-slate-50 border-slate-200 text-slate-800'
+                  }`}
                 />
                 <button 
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${theme === 'dark' ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600'}`}
                 >
                   {showConfirmPassword ? <ICONS.EyeOff className="w-4 h-4" /> : <ICONS.Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
-            <p className={`text-[9px] italic mt-2 leading-relaxed ${isValidFormat || newPassword.length === 0 ? 'text-slate-500' : 'text-red-500'}`}>
-              * Password must contain at least one special character, figure, upper and lowercase and must be a minimum of 8 characters.
+            <p className={`text-[9px] italic leading-relaxed ${
+              isValidFormat || newPassword.length === 0
+                ? theme === 'dark' ? 'text-slate-500' : 'text-slate-400'
+                : 'text-red-500'
+            }`}>
+              * Password must contain at least one special character, number, upper and lowercase and be at least 8 characters.
             </p>
             {hasMismatch && (
-              <p className="text-[10px] text-red-500 font-bold mt-1">
-                Passwords do not match.
-              </p>
+              <p className="text-[10px] text-red-500 font-bold">Passwords do not match.</p>
             )}
             
             {message && (
-              <div className={`p-3 rounded-xl text-xs font-medium animate-in fade-in slide-in-from-top-2 ${message.type === 'error' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100'}`}>
+              <div className={`p-3 rounded-xl text-xs font-medium animate-in fade-in slide-in-from-top-2 ${
+                message.type === 'error'
+                  ? 'bg-red-50 text-red-600 border border-red-200'
+                  : 'bg-green-50 text-green-700 border border-green-200'
+              }`}>
                 {message.text}
               </div>
             )}
@@ -222,7 +251,11 @@ export const MyProfile: React.FC<MyProfileProps> = ({ user, onUpdateUser }) => {
             <button 
               type="submit" 
               disabled={!canSubmitPassword}
-              className={`w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest shadow-md transition-all mt-2 ${canSubmitPassword ? 'bg-slate-800 text-white hover:bg-slate-900' : 'bg-slate-300 text-slate-500 cursor-not-allowed'}`}
+              className={`w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all mt-2 ${
+                canSubmitPassword
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : theme === 'dark' ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+              }`}
             >
               Update Password
             </button>

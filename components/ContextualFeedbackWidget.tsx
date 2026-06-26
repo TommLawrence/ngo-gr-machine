@@ -98,9 +98,15 @@ export const ContextualFeedbackWidget: React.FC<ContextualFeedbackWidgetProps> =
               <p className="text-slate-500 text-xs italic">Thank you for your feedback, It matters a lot to us</p>
             </div>
           ) : !context.draftId ? (
-            <div className="py-10 text-center flex flex-col items-center">
-              <ICONS.Info className="text-slate-300 w-10 h-10 mb-4" />
-              <p className="text-slate-500 text-xs px-4">Generate a report first to provide contextual feedback.</p>
+            <div className="py-8 text-center flex flex-col items-center relative">
+              <button
+                onClick={() => setIsOpen(false)}
+                className="absolute top-0 right-0 p-1 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <ICONS.X className="w-4 h-4 text-slate-400" />
+              </button>
+              <ICONS.Info className="text-slate-300 w-10 h-10 mb-3" />
+              <p className="text-slate-500 text-xs px-4 leading-relaxed">Generate a report first to provide contextual feedback.</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -154,7 +160,7 @@ export const ContextualFeedbackWidget: React.FC<ContextualFeedbackWidgetProps> =
               <button 
                 type="submit" 
                 disabled={isSubmitting || !messageText.trim()}
-                className={`w-full py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-2 ${isSubmitting ? 'bg-slate-100 text-slate-400' : 'bg-slate-800 text-white hover:bg-slate-900'}`}
+                className={`w-full py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${isSubmitting ? 'bg-slate-100 text-slate-400' : 'bg-slate-800 text-white hover:bg-slate-900'}`}
               >
                 {isSubmitting ? <ICONS.Loader className="w-4 h-4" /> : 'Send Message'}
               </button>

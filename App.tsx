@@ -316,14 +316,16 @@ const App: React.FC = () => {
   const isReportingActive = state.step !== 'history' && state.step !== 'admin' && state.step !== 'audit' && state.step !== 'profile';
 
   return (
-    <div className={`h-[100dvh] w-full flex flex-col transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-900 text-slate-100 dark' : 'bg-slate-50 text-slate-900'} overflow-hidden`}>
+    <div className={`h-[100dvh] w-full flex flex-col transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-900 text-slate-100 dark' : 'bg-slate-50 text-slate-900'} overflow-hidden`}
+      style={{ overscrollBehavior: 'none', backgroundColor: theme === 'dark' ? '#0f172a' : '#f8fafc' }}
+    >
       {/* Universal Header */}
       <header className={`flex-shrink-0 px-4 sm:px-6 py-3 backdrop-blur-lg border-b ${theme === 'dark' ? 'bg-slate-800/60 border-slate-700' : 'bg-white/60 border-slate-200'} flex justify-between items-center z-20 transition-all`}>
         <button
           onClick={() => setState(prev => ({ ...prev, step: 'input' }))}
           className="flex items-center gap-2 sm:gap-3 cursor-pointer hover:opacity-80 transition-opacity"
         >
-          <div className="p-1.5 sm:p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-200 flex-shrink-0">
+          <div className="p-1.5 sm:p-2 bg-blue-600 rounded-lg flex-shrink-0">
             <img src="/web_icon.png" alt="Logo" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
           </div>
           <div className="text-left">
@@ -338,8 +340,10 @@ const App: React.FC = () => {
             <span className={`text-xs font-bold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{state.user.name}</span>
             <span className="text-[10px] text-slate-400 uppercase tracking-widest">{state.user.role}</span>
           </div>
-          <div className={`hidden sm:flex w-9 h-9 rounded-full border ${theme === 'dark' ? 'border-slate-700 bg-slate-700' : 'border-slate-200 bg-slate-100'} overflow-hidden items-center justify-center`}>
-             <ICONS.Users className="w-5 h-5 text-slate-400" />
+          <div className={`hidden sm:flex w-9 h-9 rounded-full border ${theme === 'dark' ? 'border-slate-700 bg-slate-700' : 'border-slate-200 bg-slate-100'} overflow-hidden items-center justify-center flex-shrink-0`}>
+            {state.user.avatar
+              ? <img src={state.user.avatar} alt="avatar" className="w-full h-full object-cover" />
+              : <ICONS.Users className="w-5 h-5 text-slate-400" />}
           </div>
           <div className="flex items-center gap-1">
             {/* Desktop: theme + logout */}
@@ -555,8 +559,21 @@ const App: React.FC = () => {
             </GlassCard>
           </div>
           
-          <div className="mt-auto py-4 text-center flex-shrink-0 opacity-40">
-             <p className="text-[8px] text-slate-500 uppercase tracking-widest font-medium">NGO-SECURE v4.2.2-stable</p>
+          <div className="mt-auto py-4 text-center flex-shrink-0 opacity-60">
+            <p className={`text-[9px] uppercase tracking-widest font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+              A Product of{' '}
+              <a
+                href="https://crane-systems.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:text-blue-600 transition-colors inline-flex items-center gap-0.5 font-bold"
+              >
+                Crane Systems
+                <svg className="w-2.5 h-2.5" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M2.5 9.5l7-7M10 2.5H4.5M10 2.5v5.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </a>
+            </p>
           </div>
         </aside>
 
@@ -605,9 +622,9 @@ const App: React.FC = () => {
             ) : state.step === 'audit' && canViewAudit ? (
               <AdminFeedbackReview user={state.user!} />
             ) : state.step === 'admin' && isSysAdmin ? (
-              <AdminPanel user={state.user!} />
+              <AdminPanel user={state.user!} theme={theme} />
             ) : state.step === 'profile' ? (
-              <MyProfile user={state.user!} onUpdateUser={(u) => setState(prev => ({ ...prev, user: u }))} />
+              <MyProfile user={state.user!} onUpdateUser={(u) => setState(prev => ({ ...prev, user: u }))} theme={theme} />
             ) : (
               <div className="flex flex-col h-full min-h-0">
                 <div className="flex justify-between items-center mb-5 sm:mb-6 flex-shrink-0">
@@ -714,8 +731,8 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Feedback widget: always on desktop, hidden on mobile during input step */}
-      <div className={`fixed bottom-6 right-6 z-[100] ${state.step === 'input' ? 'hidden sm:block' : 'block'}`}>
+      {/* Feedback widget: desktop only — on mobile it's accessible via the menu */}
+      <div className={`fixed bottom-6 right-6 z-[100] hidden sm:block`}>
         <ContextualFeedbackWidget 
           user={state.user}
           context={{
