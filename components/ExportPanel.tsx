@@ -12,9 +12,9 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ onExport, isAvailable 
 
   const formats = [
     { id: 'pdf', label: 'Professional PDF', icon: ICONS.Pdf, color: 'hover:bg-red-50 text-red-600 border-red-100' },
-    { id: 'word', label: 'Microsoft Word', icon: ICONS.Word, color: 'hover:bg-blue-50 text-blue-600 border-blue-100' },
+    { id: 'email', label: 'Share via Email', icon: ICONS.Mail, color: 'hover:bg-blue-50 text-blue-600 border-blue-100' },
+    { id: 'word', label: 'Microsoft Word', icon: ICONS.Word, color: 'hover:bg-indigo-50 text-indigo-600 border-indigo-100' },
     { id: 'ppt', label: 'PowerPoint Deck', icon: ICONS.Ppt, color: 'hover:bg-orange-50 text-orange-600 border-orange-100' },
-    { id: 'gdoc', label: 'Google Docs', icon: ICONS.GoogleDoc, color: 'hover:bg-green-50 text-green-600 border-green-100' },
   ];
 
   return (

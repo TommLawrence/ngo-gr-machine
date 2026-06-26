@@ -207,8 +207,7 @@ const App: React.FC = () => {
 
     setState(prev => ({ 
       ...prev, 
-      isProcessing: true, 
-      step: 'processing', 
+      isProcessing: true,
       error: null,
       report: "",
       currentTaskId: null
@@ -224,7 +223,6 @@ const App: React.FC = () => {
             const newReport = (prev.report || "") + chunk;
             return {
               ...prev,
-              step: 'result',
               isProcessing: true, 
               report: newReport
             };
@@ -316,19 +314,21 @@ const App: React.FC = () => {
   const isReportingActive = state.step !== 'history' && state.step !== 'admin' && state.step !== 'audit' && state.step !== 'profile';
 
   return (
-    <div className={`h-[100dvh] w-full flex flex-col transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-900 text-slate-100 dark' : 'bg-slate-50 text-slate-900'} overflow-hidden touch-none sm:touch-auto`}>
+    <div className={`h-[100dvh] w-full flex flex-col transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-900 text-slate-100 dark' : 'bg-slate-50 text-slate-900'} overflow-hidden`}
+      style={{ backgroundColor: theme === 'dark' ? '#0f172a' : '#f8fafc' }}
+    >
       {/* Universal Header */}
       <header className={`flex-shrink-0 px-4 sm:px-6 py-3 backdrop-blur-lg border-b ${theme === 'dark' ? 'bg-slate-800/60 border-slate-700' : 'bg-white/60 border-slate-200'} flex justify-between items-center z-20 transition-all`}>
         <button
           onClick={() => setState(prev => ({ ...prev, step: 'input' }))}
           className="flex items-center gap-2 sm:gap-3 cursor-pointer hover:opacity-80 transition-opacity"
         >
-          <div className="p-1.5 sm:p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-200">
-            <img src="/web_icon.png" alt="Logo" className="w-5 h-5 sm:w-6 sm:h-6 object-contain brightness-0 invert" />
+          <div className="p-1.5 sm:p-2 bg-blue-600 rounded-lg flex-shrink-0">
+            <img src="/web_icon.png" alt="Logo" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
           </div>
           <div className="text-left">
             <h1 className={`hidden sm:block text-lg sm:text-xl font-bold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} tracking-tight leading-none mb-0.5`}>{APP_NAME}</h1>
-            <p className={`sm:hidden text-xs font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} leading-none`}>{getGreeting()}, {state.user.name.split(' ')[0]}!</p>
+            <p className={`sm:hidden text-xs font-bold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} leading-none`}>{getGreeting()}, {state.user.name.split(' ')[0]}!</p>
             <span className="text-[8px] sm:text-[9px] text-blue-500 font-bold uppercase tracking-widest">Enterprise Reporting Hub</span>
           </div>
         </button>
@@ -338,8 +338,10 @@ const App: React.FC = () => {
             <span className={`text-xs font-bold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{state.user.name}</span>
             <span className="text-[10px] text-slate-400 uppercase tracking-widest">{state.user.role}</span>
           </div>
-          <div className={`hidden sm:flex w-9 h-9 rounded-full border ${theme === 'dark' ? 'border-slate-700 bg-slate-700' : 'border-slate-200 bg-slate-100'} overflow-hidden items-center justify-center`}>
-             <ICONS.Users className="w-5 h-5 text-slate-400" />
+          <div className={`hidden sm:flex w-9 h-9 rounded-full border ${theme === 'dark' ? 'border-slate-700 bg-slate-700' : 'border-slate-200 bg-slate-100'} overflow-hidden items-center justify-center flex-shrink-0`}>
+            {state.user.avatar
+              ? <img src={state.user.avatar} alt="avatar" className="w-full h-full object-cover" />
+              : <ICONS.Users className="w-5 h-5 text-slate-400" />}
           </div>
           <div className="flex items-center gap-1">
             {/* Desktop: theme + logout */}
@@ -433,8 +435,10 @@ const App: React.FC = () => {
       <main className="flex-grow flex flex-col lg:flex-row overflow-hidden relative">
         {/* Sidebar: hidden on mobile when browsing sub-pages */}
         <aside className={`${
-          !isReportingActive ? 'hidden lg:flex' : 'flex'
-        } w-full lg:w-[34rem] flex-shrink-0 flex-col p-4 gap-4 ${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-100/50 border-slate-200'} border-r overflow-y-auto max-h-[40vh] lg:max-h-none lg:h-full scrollbar-thin`}>
+          !isReportingActive ? 'hidden lg:flex'
+          : state.step === 'input' ? 'flex flex-grow lg:flex-grow-0'
+          : 'flex'
+        } w-full lg:w-[34rem] flex-shrink-0 flex-col p-4 gap-4 ${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-100/50 border-slate-200'} border-r overflow-y-auto ${state.step === 'input' ? 'max-h-none' : 'max-h-[40vh]'} lg:max-h-none lg:h-full scrollbar-thin`}>
           <div className={`rounded-2xl p-1 shadow-sm border ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200/60'} flex-shrink-0`}>
             <button 
               onClick={() => setState(prev => ({ ...prev, step: 'input' }))} 
@@ -449,29 +453,44 @@ const App: React.FC = () => {
               <div className="space-y-3 sm:space-y-4">
                 <div>
                   <label className={`block text-[10px] font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'} uppercase tracking-widest mb-1.5 ml-1`}>Donor Specification</label>
-                  <select name="donor_type" value={inputs.donor_type} onChange={handleInputChange} className={`w-full border rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/10 text-sm cursor-pointer appearance-none ${theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-700'}`}>
-                    <option value={DonorType.USAID}>USAID Standard Reporting</option>
-                    <option value={DonorType.EU}>EU / ECHO Guidelines</option>
-                    <option value={DonorType.UN}>UN Multi-Agency Format</option>
-                    <option value={DonorType.LOCAL_GOV}>Local Gov (Regional Auth.)</option>
-                  </select>
+                  <div className="relative">
+                    <select name="donor_type" value={inputs.donor_type} onChange={handleInputChange} className={`w-full border rounded-xl pl-3 pr-9 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/10 text-sm cursor-pointer appearance-none ${theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-700'}`}>
+                      <option value={DonorType.USAID}>USAID Standard Reporting</option>
+                      <option value={DonorType.EU}>EU / ECHO Guidelines</option>
+                      <option value={DonorType.UN}>UN Multi-Agency Format</option>
+                      <option value={DonorType.LOCAL_GOV}>Local Gov (Regional Auth.)</option>
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                      <ICONS.ChevronDown className="w-4 h-4" />
+                    </div>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className={`block text-[10px] font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'} uppercase tracking-widest mb-1.5 ml-1`}>Language</label>
-                    <select name="language" value={inputs.language} onChange={handleInputChange} className={`w-full border rounded-xl px-3 py-2.5 focus:outline-none text-sm ${theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-600'}`}>
-                      <option value="English">English</option>
-                      <option value="French">French</option>
-                      <option value="Swahili">Swahili</option>
-                      <option value="Arabic">Arabic</option>
-                    </select>
+                    <div className="relative">
+                      <select name="language" value={inputs.language} onChange={handleInputChange} className={`w-full border rounded-xl pl-3 pr-9 py-2.5 focus:outline-none text-sm cursor-pointer appearance-none ${theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-600'}`}>
+                        <option value="English">English</option>
+                        <option value="French">French</option>
+                        <option value="Swahili">Swahili</option>
+                        <option value="Arabic">Arabic</option>
+                      </select>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <ICONS.ChevronDown className="w-4 h-4" />
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <label className={`block text-[10px] font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'} uppercase tracking-widest mb-1.5 ml-1`}>Report Style</label>
-                    <select name="style" value={inputs.style} onChange={handleInputChange} className={`w-full border rounded-xl px-3 py-2.5 focus:outline-none text-sm ${theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-600'}`}>
-                      <option value="executive">Executive</option>
-                      <option value="auditor">Auditor</option>
-                    </select>
+                    <div className="relative">
+                      <select name="style" value={inputs.style} onChange={handleInputChange} className={`w-full border rounded-xl pl-3 pr-9 py-2.5 focus:outline-none text-sm cursor-pointer appearance-none ${theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-600'}`}>
+                        <option value="executive">Executive</option>
+                        <option value="auditor">Auditor</option>
+                      </select>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <ICONS.ChevronDown className="w-4 h-4" />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -553,13 +572,28 @@ const App: React.FC = () => {
             </GlassCard>
           </div>
           
-          <div className="mt-auto py-4 text-center flex-shrink-0 opacity-40">
-             <p className="text-[8px] text-slate-500 uppercase tracking-widest font-medium">NGO-SECURE v4.2.2-stable</p>
+          <div className="mt-auto py-4 text-center flex-shrink-0 opacity-60">
+            <p className={`text-[9px] uppercase tracking-widest font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+              A Product of{' '}
+              <a
+                href="https://crane-systems.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:text-blue-600 transition-colors inline-flex items-center gap-0.5 font-bold"
+              >
+                Crane Systems
+                <svg className="w-2.5 h-2.5" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M2.5 9.5l7-7M10 2.5H4.5M10 2.5v5.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </a>
+            </p>
           </div>
         </aside>
 
-        {/* Dynamic Main Content Pane */}
-        <div className="flex-grow flex flex-col p-4 sm:p-6 overflow-hidden relative min-h-0">
+        {/* Dynamic Main Content Pane: hidden on mobile during input step */}
+        <div className={`${
+          state.step === 'input' ? 'hidden sm:flex' : 'flex'
+        } flex-grow flex-col p-4 sm:p-6 overflow-hidden relative min-h-0`}>
           
           <nav className={`hidden sm:flex flex-shrink-0 items-center gap-1.5 mb-6 ${theme === 'dark' ? 'bg-slate-800/40' : 'bg-slate-200/40'} p-1 rounded-2xl w-fit overflow-x-auto no-scrollbar scroll-smooth`}>
             <button 
@@ -595,15 +629,19 @@ const App: React.FC = () => {
             )}
           </nav>
 
-          <GlassCard className={`flex-grow flex flex-col min-h-0 overflow-y-auto lg:overflow-hidden shadow-2xl ${theme === 'dark' ? '!bg-slate-800/80 border-slate-700' : '!bg-white/80 border-white/50'} scroll-smooth`}>
+          <GlassCard className={`flex-grow flex flex-col min-h-0 overflow-y-auto lg:overflow-hidden scroll-smooth ${
+            (state.step === 'admin' || state.step === 'profile') 
+              ? '!p-0 !bg-transparent !border-transparent !shadow-none' 
+              : `shadow-2xl ${theme === 'dark' ? '!bg-slate-800/80 border-slate-700' : '!bg-white/80 border-white/50'}`
+          }`}>
             {state.step === 'history' ? (
-              <HistorySection user={state.user!} history={state.history} onSelectItem={handleSelectHistoryItem} onDeleteItem={deleteHistoryItem} />
+              <HistorySection user={state.user!} history={state.history} onSelectItem={handleSelectHistoryItem} onDeleteItem={deleteHistoryItem} theme={theme} />
             ) : state.step === 'audit' && canViewAudit ? (
-              <AdminFeedbackReview user={state.user!} />
+              <AdminFeedbackReview user={state.user!} theme={theme} />
             ) : state.step === 'admin' && isSysAdmin ? (
-              <AdminPanel user={state.user!} />
+              <AdminPanel user={state.user!} theme={theme} />
             ) : state.step === 'profile' ? (
-              <MyProfile user={state.user!} onUpdateUser={(u) => setState(prev => ({ ...prev, user: u }))} />
+              <MyProfile user={state.user!} onUpdateUser={(u) => setState(prev => ({ ...prev, user: u }))} theme={theme} />
             ) : (
               <div className="flex flex-col h-full min-h-0">
                 <div className="flex justify-between items-center mb-5 sm:mb-6 flex-shrink-0">
@@ -703,14 +741,14 @@ const App: React.FC = () => {
                 </p>
               </section>
             </div>
-            <button onClick={() => setShowInfoModal(false)} className="w-full mt-8 py-3.5 bg-blue-600 text-white rounded-2xl font-bold uppercase tracking-widest text-[10px] hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
+            <button onClick={() => setShowInfoModal(false)} className="w-full mt-8 py-3.5 bg-blue-600 text-white rounded-2xl font-bold uppercase tracking-widest text-[10px] hover:bg-blue-700 transition-all">
               ACKNOWLEDGE POLICY
             </button>
           </div>
         </div>
       )}
 
-      {/* Feedback widget — always rendered so mobile menu can trigger it */}
+      {/* Feedback widget: Modal is always present, but toggle button hidden on mobile */}
       <div className="fixed bottom-6 right-6 z-[100]">
         <ContextualFeedbackWidget 
           user={state.user}
