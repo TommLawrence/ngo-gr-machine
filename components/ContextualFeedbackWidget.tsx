@@ -173,7 +173,7 @@ export const ContextualFeedbackWidget: React.FC<ContextualFeedbackWidgetProps> =
       <button 
         id="feedback-toggle-btn"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-2xl ${isOpen ? 'bg-slate-100 text-slate-400 rotate-90 scale-90' : 'bg-blue-600 text-white hover:bg-blue-700 hover:scale-110 active:scale-95'}`}
+        className={`hidden sm:flex w-14 h-14 rounded-full items-center justify-center transition-all shadow-2xl ${isOpen ? 'bg-slate-100 text-slate-400 rotate-90 scale-90' : 'bg-blue-600 text-white hover:bg-blue-700 hover:scale-110 active:scale-95'}`}
       >
         {isOpen ? <ICONS.X className="w-6 h-6" /> : <ICONS.MessageSquare className="w-6 h-6" />}
       </button>

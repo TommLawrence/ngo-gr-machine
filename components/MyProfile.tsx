@@ -112,7 +112,7 @@ export const MyProfile: React.FC<MyProfileProps> = ({ user, onUpdateUser, theme 
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0 p-2 sm:p-4">
+    <div className="flex flex-col h-full min-h-0">
       <div className="flex justify-between items-center mb-6 flex-shrink-0">
         <div className="flex items-center gap-2 text-blue-600">
           <ICONS.UserIcon className="w-5 h-5" />
@@ -125,7 +125,7 @@ export const MyProfile: React.FC<MyProfileProps> = ({ user, onUpdateUser, theme 
         <div className={`p-5 sm:p-6 rounded-2xl border flex flex-col md:flex-row gap-5 items-center md:items-start transition-colors ${
           theme === 'dark'
             ? 'bg-slate-800 border-slate-700'
-            : 'bg-white border-slate-200/80'
+            : 'bg-white'
         }`}>
           <div className="flex-shrink-0 relative group">
             <div className={`w-24 h-24 rounded-full border-4 overflow-hidden flex items-center justify-center ${
@@ -159,7 +159,7 @@ export const MyProfile: React.FC<MyProfileProps> = ({ user, onUpdateUser, theme 
         <div className={`p-4 sm:p-6 rounded-2xl border w-full transition-colors ${
           theme === 'dark'
             ? 'bg-slate-800 border-slate-700'
-            : 'bg-white border-slate-200/80'
+            : 'bg-white'
         }`}>
           <h4 className={`text-sm font-bold mb-4 flex items-center gap-2 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
             <ICONS.Lock className="w-4 h-4 text-blue-500" /> Update Password

@@ -207,8 +207,7 @@ const App: React.FC = () => {
 
     setState(prev => ({ 
       ...prev, 
-      isProcessing: true, 
-      step: 'processing', 
+      isProcessing: true,
       error: null,
       report: "",
       currentTaskId: null
@@ -224,7 +223,6 @@ const App: React.FC = () => {
             const newReport = (prev.report || "") + chunk;
             return {
               ...prev,
-              step: 'result',
               isProcessing: true, 
               report: newReport
             };
@@ -317,7 +315,7 @@ const App: React.FC = () => {
 
   return (
     <div className={`h-[100dvh] w-full flex flex-col transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-900 text-slate-100 dark' : 'bg-slate-50 text-slate-900'} overflow-hidden`}
-      style={{ overscrollBehavior: 'none', backgroundColor: theme === 'dark' ? '#0f172a' : '#f8fafc' }}
+      style={{ backgroundColor: theme === 'dark' ? '#0f172a' : '#f8fafc' }}
     >
       {/* Universal Header */}
       <header className={`flex-shrink-0 px-4 sm:px-6 py-3 backdrop-blur-lg border-b ${theme === 'dark' ? 'bg-slate-800/60 border-slate-700' : 'bg-white/60 border-slate-200'} flex justify-between items-center z-20 transition-all`}>
@@ -455,29 +453,44 @@ const App: React.FC = () => {
               <div className="space-y-3 sm:space-y-4">
                 <div>
                   <label className={`block text-[10px] font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'} uppercase tracking-widest mb-1.5 ml-1`}>Donor Specification</label>
-                  <select name="donor_type" value={inputs.donor_type} onChange={handleInputChange} className={`w-full border rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/10 text-sm cursor-pointer appearance-none ${theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-700'}`}>
-                    <option value={DonorType.USAID}>USAID Standard Reporting</option>
-                    <option value={DonorType.EU}>EU / ECHO Guidelines</option>
-                    <option value={DonorType.UN}>UN Multi-Agency Format</option>
-                    <option value={DonorType.LOCAL_GOV}>Local Gov (Regional Auth.)</option>
-                  </select>
+                  <div className="relative">
+                    <select name="donor_type" value={inputs.donor_type} onChange={handleInputChange} className={`w-full border rounded-xl pl-3 pr-9 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/10 text-sm cursor-pointer appearance-none ${theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-700'}`}>
+                      <option value={DonorType.USAID}>USAID Standard Reporting</option>
+                      <option value={DonorType.EU}>EU / ECHO Guidelines</option>
+                      <option value={DonorType.UN}>UN Multi-Agency Format</option>
+                      <option value={DonorType.LOCAL_GOV}>Local Gov (Regional Auth.)</option>
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                      <ICONS.ChevronDown className="w-4 h-4" />
+                    </div>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className={`block text-[10px] font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'} uppercase tracking-widest mb-1.5 ml-1`}>Language</label>
-                    <select name="language" value={inputs.language} onChange={handleInputChange} className={`w-full border rounded-xl px-3 py-2.5 focus:outline-none text-sm ${theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-600'}`}>
-                      <option value="English">English</option>
-                      <option value="French">French</option>
-                      <option value="Swahili">Swahili</option>
-                      <option value="Arabic">Arabic</option>
-                    </select>
+                    <div className="relative">
+                      <select name="language" value={inputs.language} onChange={handleInputChange} className={`w-full border rounded-xl pl-3 pr-9 py-2.5 focus:outline-none text-sm cursor-pointer appearance-none ${theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-600'}`}>
+                        <option value="English">English</option>
+                        <option value="French">French</option>
+                        <option value="Swahili">Swahili</option>
+                        <option value="Arabic">Arabic</option>
+                      </select>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <ICONS.ChevronDown className="w-4 h-4" />
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <label className={`block text-[10px] font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'} uppercase tracking-widest mb-1.5 ml-1`}>Report Style</label>
-                    <select name="style" value={inputs.style} onChange={handleInputChange} className={`w-full border rounded-xl px-3 py-2.5 focus:outline-none text-sm ${theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-600'}`}>
-                      <option value="executive">Executive</option>
-                      <option value="auditor">Auditor</option>
-                    </select>
+                    <div className="relative">
+                      <select name="style" value={inputs.style} onChange={handleInputChange} className={`w-full border rounded-xl pl-3 pr-9 py-2.5 focus:outline-none text-sm cursor-pointer appearance-none ${theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-600'}`}>
+                        <option value="executive">Executive</option>
+                        <option value="auditor">Auditor</option>
+                      </select>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <ICONS.ChevronDown className="w-4 h-4" />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -616,11 +629,15 @@ const App: React.FC = () => {
             )}
           </nav>
 
-          <GlassCard className={`flex-grow flex flex-col min-h-0 overflow-y-auto lg:overflow-hidden shadow-2xl ${theme === 'dark' ? '!bg-slate-800/80 border-slate-700' : '!bg-white/80 border-white/50'} scroll-smooth`}>
+          <GlassCard className={`flex-grow flex flex-col min-h-0 overflow-y-auto lg:overflow-hidden scroll-smooth ${
+            (state.step === 'admin' || state.step === 'profile') 
+              ? '!p-0 !bg-transparent !border-transparent !shadow-none' 
+              : `shadow-2xl ${theme === 'dark' ? '!bg-slate-800/80 border-slate-700' : '!bg-white/80 border-white/50'}`
+          }`}>
             {state.step === 'history' ? (
-              <HistorySection user={state.user!} history={state.history} onSelectItem={handleSelectHistoryItem} onDeleteItem={deleteHistoryItem} />
+              <HistorySection user={state.user!} history={state.history} onSelectItem={handleSelectHistoryItem} onDeleteItem={deleteHistoryItem} theme={theme} />
             ) : state.step === 'audit' && canViewAudit ? (
-              <AdminFeedbackReview user={state.user!} />
+              <AdminFeedbackReview user={state.user!} theme={theme} />
             ) : state.step === 'admin' && isSysAdmin ? (
               <AdminPanel user={state.user!} theme={theme} />
             ) : state.step === 'profile' ? (
@@ -724,15 +741,15 @@ const App: React.FC = () => {
                 </p>
               </section>
             </div>
-            <button onClick={() => setShowInfoModal(false)} className="w-full mt-8 py-3.5 bg-blue-600 text-white rounded-2xl font-bold uppercase tracking-widest text-[10px] hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
+            <button onClick={() => setShowInfoModal(false)} className="w-full mt-8 py-3.5 bg-blue-600 text-white rounded-2xl font-bold uppercase tracking-widest text-[10px] hover:bg-blue-700 transition-all">
               ACKNOWLEDGE POLICY
             </button>
           </div>
         </div>
       )}
 
-      {/* Feedback widget: desktop only — on mobile it's accessible via the menu */}
-      <div className={`fixed bottom-6 right-6 z-[100] hidden sm:block`}>
+      {/* Feedback widget: Modal is always present, but toggle button hidden on mobile */}
+      <div className="fixed bottom-6 right-6 z-[100]">
         <ContextualFeedbackWidget 
           user={state.user}
           context={{

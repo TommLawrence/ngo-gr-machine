@@ -12,6 +12,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, theme = 'light' })
   const [accounts, setAccounts] = useState<UserAccount[]>([]);
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [showProvisionPassword, setShowProvisionPassword] = useState(false);
   
   const [newUser, setNewUser] = useState({
     name: '',
@@ -132,7 +133,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, theme = 'light' })
                   {[
                     { label: 'Full Name', type: 'text', val: newUser.name, onChange: (v: string) => setNewUser({...newUser, name: v}) },
                     { label: 'Email', type: 'email', val: newUser.email, onChange: (v: string) => setNewUser({...newUser, email: v}) },
-                    { label: 'Password', type: 'password', val: newUser.password, onChange: (v: string) => setNewUser({...newUser, password: v}) },
                   ].map(f => (
                     <div key={f.label} className="space-y-1.5">
                       <label className={`text-[10px] font-bold uppercase tracking-wider ml-1 ${t('text-slate-500', 'text-slate-400')}`}>{f.label}</label>
@@ -141,15 +141,30 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, theme = 'light' })
                     </div>
                   ))}
                   <div className="space-y-1.5">
+                    <label className={`text-[10px] font-bold uppercase tracking-wider ml-1 ${t('text-slate-500', 'text-slate-400')}`}>Password</label>
+                    <div className="relative">
+                      <input required type={showProvisionPassword ? "text" : "password"} value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})}
+                        className={`w-full border rounded-xl px-4 py-3 pr-10 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${t('bg-slate-50 border-slate-200 text-slate-800', 'bg-slate-900 border-slate-600 text-slate-100')}`} />
+                      <button type="button" onClick={() => setShowProvisionPassword(!showProvisionPassword)} className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${t('text-slate-400 hover:text-slate-600', 'text-slate-500 hover:text-slate-300')}`}>
+                        {showProvisionPassword ? <ICONS.EyeOff className="w-4 h-4" /> : <ICONS.Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
                     <label className={`text-[10px] font-bold uppercase tracking-wider ml-1 ${t('text-slate-500', 'text-slate-400')}`}>Role</label>
-                    <select value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value as UserRole})}
-                      className={`w-full border rounded-xl px-4 py-3 text-xs focus:outline-none ${t('bg-slate-50 border-slate-200 text-slate-800', 'bg-slate-900 border-slate-600 text-slate-100')}`}>
-                      <option value="OFFICER">Officer</option>
-                      <option value="MANAGER">Manager</option>
-                      <option value="DIRECTOR">Director</option>
-                      <option value="AUDITOR">Internal Auditor</option>
-                      <option value="SYSADMIN">System Admin</option>
-                    </select>
+                    <div className="relative">
+                      <select value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value as UserRole})}
+                        className={`w-full border rounded-xl pl-4 pr-10 py-3 text-xs focus:outline-none cursor-pointer appearance-none ${t('bg-slate-50 border-slate-200 text-slate-800', 'bg-slate-900 border-slate-600 text-slate-100')}`}>
+                        <option value="OFFICER">Officer</option>
+                        <option value="MANAGER">Manager</option>
+                        <option value="DIRECTOR">Director</option>
+                        <option value="AUDITOR">Internal Auditor</option>
+                        <option value="SYSADMIN">System Admin</option>
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <ICONS.ChevronDown className="w-4 h-4" />
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -177,14 +192,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, theme = 'light' })
                   ))}
                   <div className="space-y-1.5 sm:col-span-2">
                     <label className={`text-[10px] font-bold uppercase tracking-wider ml-1 ${t('text-slate-500', 'text-slate-400')}`}>Role</label>
-                    <select value={editUser.role} onChange={e => setEditUser({...editUser, role: e.target.value as UserRole})}
-                      className={`w-full border rounded-xl px-4 py-3 text-xs focus:outline-none ${t('bg-slate-50 border-slate-200 text-slate-800', 'bg-slate-900 border-slate-600 text-slate-100')}`}>
-                      <option value="OFFICER">Officer</option>
-                      <option value="MANAGER">Manager</option>
-                      <option value="DIRECTOR">Director</option>
-                      <option value="AUDITOR">Internal Auditor</option>
-                      <option value="SYSADMIN">System Admin</option>
-                    </select>
+                    <div className="relative">
+                      <select value={editUser.role} onChange={e => setEditUser({...editUser, role: e.target.value as UserRole})}
+                        className={`w-full border rounded-xl pl-4 pr-10 py-3 text-xs focus:outline-none cursor-pointer appearance-none ${t('bg-slate-50 border-slate-200 text-slate-800', 'bg-slate-900 border-slate-600 text-slate-100')}`}>
+                        <option value="OFFICER">Officer</option>
+                        <option value="MANAGER">Manager</option>
+                        <option value="DIRECTOR">Director</option>
+                        <option value="AUDITOR">Internal Auditor</option>
+                        <option value="SYSADMIN">System Admin</option>
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <ICONS.ChevronDown className="w-4 h-4" />
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="flex gap-3">

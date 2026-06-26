@@ -8,9 +8,10 @@ interface HistorySectionProps {
   history: HistoryItem[];
   onSelectItem: (item: HistoryItem) => void;
   onDeleteItem: (id: string) => void;
+  theme?: 'light' | 'dark';
 }
 
-export const HistorySection: React.FC<HistorySectionProps> = ({ user, history, onSelectItem, onDeleteItem }) => {
+export const HistorySection: React.FC<HistorySectionProps> = ({ user, history, onSelectItem, onDeleteItem, theme = 'light' }) => {
   const filteredHistory = user.role === 'MANAGER' 
     ? history 
     : history.filter(item => item.userId === user.id);
@@ -19,14 +20,14 @@ export const HistorySection: React.FC<HistorySectionProps> = ({ user, history, o
     <div className="animate-in fade-in slide-in-from-bottom-4 h-full flex flex-col min-h-0">
       <div className="flex items-center justify-between mb-6 flex-shrink-0">
         <div>
-          <h3 className="text-xl font-bold text-slate-800 dark:text-white">
+          <h3 className={`text-lg sm:text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
             {user.role === 'MANAGER' ? 'Organization Archives' : 'Draft History'}
           </h3>
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-300 mt-1">
+          <p className={`text-sm font-medium mt-1 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-500'}`}>
             {filteredHistory.length} synthesized drafts found.
           </p>
         </div>
-        <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${user.role === 'MANAGER' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
+        <div className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex-shrink-0 ${user.role === 'MANAGER' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
           {user.role} View
         </div>
       </div>

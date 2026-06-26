@@ -6,9 +6,10 @@ import { fetchFeedbackReview } from '../services/difyService.ts';
 
 interface AdminFeedbackReviewProps {
   user: User;
+  theme?: 'light' | 'dark';
 }
 
-export const AdminFeedbackReview: React.FC<AdminFeedbackReviewProps> = ({ user }) => {
+export const AdminFeedbackReview: React.FC<AdminFeedbackReviewProps> = ({ user, theme = 'light' }) => {
   const [records, setRecords] = useState<AdminFeedbackRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,14 +40,14 @@ export const AdminFeedbackReview: React.FC<AdminFeedbackReviewProps> = ({ user }
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 h-full flex flex-col min-h-0 overflow-y-auto sm:overflow-hidden scrollbar-thin scroll-smooth">
-      <div className="flex items-center justify-between mb-6 flex-shrink-0">
+      <div className="flex items-start justify-between mb-6 flex-shrink-0">
         <div>
-          <h3 className="text-xl font-bold text-slate-800 dark:text-white">Intelligence Review (Read-Only)</h3>
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-300 mt-1">
+          <h3 className={`text-lg sm:text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>Intelligence Review (Read-Only)</h3>
+          <p className={`text-sm font-medium mt-1 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-500'}`}>
             Audit trail of synthesized intelligence. Immutable records.
           </p>
         </div>
-        <div className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold uppercase tracking-widest">
+        <div className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-[9px] font-bold uppercase tracking-wider flex-shrink-0 mt-1">
           Audit Mode
         </div>
       </div>
