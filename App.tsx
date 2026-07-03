@@ -14,8 +14,18 @@ import { AdminPanel } from './components/AdminPanel.tsx';
 import { AdminFeedbackReview } from './components/AdminFeedbackReview.tsx';
 import { MyProfile } from './components/MyProfile.tsx';
 import { marked } from 'marked';
+import { SignedIn, SignedOut, UserButton, useUser } from '@clerk/clerk-react';
+import { useQuery, useMutation, useAction } from 'convex/react';
+import { api } from './convex/_generated/api';
 
-const App: React.FC = () => {
+const MainApp: React.FC = () => {
+  const { user: clerkUser } = useUser();
+  const storeUser = useMutation(api.users.storeUser);
+  const currentUser = useQuery(api.users.currentUser);
+  const addHistoryItem = useMutation(api.history.addHistoryItem);
+  const removeHistoryItem = useMutation(api.history.deleteHistoryItem);
+  const generateReportAction = useAction(api.ai.generateReport);
+  const userHistory = useQuery(api.history.getHistoryByUser, clerkUser ? { clerkId: clerkUser.id } : "skip");
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('app_theme');
     return (saved as 'light' | 'dark') || 'light';
@@ -23,15 +33,9 @@ const App: React.FC = () => {
 
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
-  // Restore user session from localStorage on mount
-  const savedUser = (() => {
-    try { const u = localStorage.getItem('ngo_session_user'); return u ? JSON.parse(u) : null; } catch { return null; }
-  })();
-
   const [state, setState] = useState<AppState & { currentTaskId?: string | null }>(() => {
-    const savedHistory = localStorage.getItem('grant_machine_history');
     return {
-      user: savedUser,
+      user: null,
       isProcessing: false,
       isRecording: false,
       liveTranscription: '',
@@ -41,7 +45,7 @@ const App: React.FC = () => {
       report: null,
       downloadUrl: null,
       complianceChecked: false,
-      history: savedHistory ? JSON.parse(savedHistory) : [],
+      history: [],
       currentTaskId: null
     };
   });
@@ -78,14 +82,64 @@ const App: React.FC = () => {
     localStorage.setItem('app_theme', theme);
   }, [theme]);
 
-  // Persist user session
+  // Sync clerk user to Convex and State
   useEffect(() => {
-    if (state.user) {
-      localStorage.setItem('ngo_session_user', JSON.stringify(state.user));
-    } else {
-      localStorage.removeItem('ngo_session_user');
+    if (clerkUser) {
+      storeUser({
+        clerkId: clerkUser.id,
+        name: clerkUser.fullName || clerkUser.primaryEmailAddress?.emailAddress || 'User',
+        email: clerkUser.primaryEmailAddress?.emailAddress || '',
+        imageUrl: clerkUser.imageUrl
+      }).catch(console.error);
     }
-  }, [state.user]);
+  }, [clerkUser, storeUser]);
+
+  useEffect(() => {
+    if (currentUser && clerkUser) {
+      setState(prev => ({
+        ...prev,
+        user: {
+          id: currentUser.clerkId,
+          name: clerkUser.fullName || currentUser.name,
+          email: clerkUser.primaryEmailAddress?.emailAddress || currentUser.email,
+          role: currentUser.role as UserRole,
+          avatar: clerkUser.imageUrl
+        }
+      }));
+    } else if (clerkUser) {
+      setState(prev => ({
+        ...prev,
+        user: {
+          id: clerkUser.id,
+          name: clerkUser.fullName || clerkUser.primaryEmailAddress?.emailAddress || 'User',
+          email: clerkUser.primaryEmailAddress?.emailAddress || '',
+          role: 'OFFICER',
+          avatar: clerkUser.imageUrl
+        }
+      }));
+    } else {
+      setState(prev => ({ ...prev, user: null }));
+    }
+  }, [currentUser, clerkUser]);
+
+  // Sync History
+  useEffect(() => {
+    if (userHistory) {
+      setState(prev => ({
+        ...prev,
+        history: userHistory.map(h => ({
+          id: h._id,
+          userId: h.userId,
+          userName: h.userName,
+          timestamp: h.timestamp,
+          donorType: h.donorType as any,
+          summary: h.summary,
+          report: h.report,
+          downloadUrl: h.downloadUrl
+        }))
+      }));
+    }
+  }, [userHistory]);
 
   // Close mobile menu on outside click
   useEffect(() => {
@@ -113,9 +167,7 @@ const App: React.FC = () => {
     localStorage.setItem('grant_machine_draft', JSON.stringify(draftToSave));
   }, [inputs]);
 
-  useEffect(() => {
-    localStorage.setItem('grant_machine_history', JSON.stringify(state.history));
-  }, [state.history]);
+
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
@@ -149,12 +201,9 @@ const App: React.FC = () => {
     }
   };
 
-  const deleteHistoryItem = (id: string) => {
+  const deleteHistoryItem = async (id: string) => {
     if (confirm("Permanently remove this draft from archives?")) {
-      setState(prev => ({
-        ...prev,
-        history: prev.history.filter(item => item.id !== id)
-      }));
+      await removeHistoryItem({ id: id as any });
     }
   };
 
@@ -214,41 +263,56 @@ const App: React.FC = () => {
     }));
 
     try {
-      const result = await runGrantWorkflow(
-        inputs, 
-        state.user.id, 
-        (msg) => setState(prev => ({ ...prev, progressMessage: msg })),
-        (chunk) => {
-          setState(prev => {
-            const newReport = (prev.report || "") + chunk;
-            return {
-              ...prev,
-              isProcessing: true, 
-              report: newReport
-            };
-          });
-        }
-      );
+      setState(prev => ({ ...prev, progressMessage: "Analyzing field data with AI..." }));
 
-      const newHistoryItem: HistoryItem = {
-        id: result.task_id || Math.random().toString(36).substr(2, 9),
+      let audioBase64 = undefined;
+      let audioMimeType = undefined;
+      
+      if (inputs.field_notes_voice) {
+        setState(prev => ({ ...prev, progressMessage: "Processing audio attachment..." }));
+        const base64 = await new Promise<string>((resolve) => {
+           const reader = new FileReader();
+           reader.onloadend = () => resolve(reader.result as string);
+           reader.readAsDataURL(inputs.field_notes_voice!);
+        });
+        audioBase64 = base64.split(',')[1];
+        audioMimeType = inputs.field_notes_voice.type || "audio/wav";
+      }
+
+      setState(prev => ({ ...prev, progressMessage: "Synthesizing report based on donor specifications..." }));
+
+      const actionArgs: any = {
+        donorType: inputs.donor_type,
+        fieldNotesText: inputs.field_notes_text,
+        language: inputs.language,
+        style: inputs.style,
+      };
+
+      if (audioBase64 && audioMimeType) {
+        actionArgs.audioBase64 = audioBase64;
+        actionArgs.audioMimeType = audioMimeType;
+      }
+
+      const markdown_report = await generateReportAction(actionArgs);
+
+      setState(prev => ({ ...prev, progressMessage: "Finalizing draft..." }));
+
+      const taskId = await addHistoryItem({
         userId: state.user.id,
         userName: state.user.name,
-        timestamp: Date.now(),
         donorType: inputs.donor_type,
-        summary: result.outputs.executive_summary || `Draft for ${inputs.donor_type}`,
-        report: result.outputs.markdown_report,
-        downloadUrl: result.outputs.download_url || '#'
-      };
+        summary: `Synthesized ${inputs.donor_type} report`,
+        report: markdown_report,
+        downloadUrl: '#'
+      });
 
       setState(prev => ({
         ...prev,
         isProcessing: false,
         step: 'result',
-        report: result.outputs.markdown_report,
-        downloadUrl: result.outputs.download_url || null,
-        history: [newHistoryItem, ...prev.history],
-        currentTaskId: result.task_id
+        report: markdown_report,
+        downloadUrl: null,
+        currentTaskId: taskId
       }));
       
       setInputs(prev => ({ ...prev, field_notes_text: '', field_notes_voice: null, field_notes_file: null }));
@@ -293,21 +357,21 @@ const App: React.FC = () => {
     setIsEditingReport(false);
   };
 
-  const handleLogin = (user: any) => {
-    localStorage.setItem('ngo_session_user', JSON.stringify(user));
-    setState(prev => ({ ...prev, user }));
-  };
 
-  const handleLogout = () => {
-    localStorage.removeItem('ngo_session_user');
-    setState(prev => ({ ...prev, user: null }));
-  };
-
-  if (!state.user) {
-    return <LoginScreen onLogin={handleLogin} />;
-  }
 
   const isInputValid = inputs.field_notes_text.trim().length > 0 || inputs.field_notes_voice !== null || inputs.field_notes_file !== null;
+
+  // Show a loading spinner while Convex resolves the user
+  if (!state.user) {
+    return (
+      <div className="h-[100dvh] w-full flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs text-slate-400 uppercase tracking-widest font-bold">Loading session...</p>
+        </div>
+      </div>
+    );
+  }
 
   const isSysAdmin = state.user.role === 'SYSADMIN';
   const canViewAudit = ['MANAGER', 'DIRECTOR', 'AUDITOR', 'SYSADMIN'].includes(state.user.role);
@@ -317,6 +381,27 @@ const App: React.FC = () => {
     <div className={`h-[100dvh] w-full flex flex-col transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-900 text-slate-100 dark' : 'bg-slate-50 text-slate-900'} overflow-hidden`}
       style={{ backgroundColor: theme === 'dark' ? '#0f172a' : '#f8fafc' }}
     >
+      {/* Floating Error Notification */}
+      {state.error && (
+        <div className="fixed top-4 right-4 sm:top-6 sm:right-6 left-4 sm:left-auto z-50 animate-in fade-in slide-in-from-top-4 duration-300 max-w-sm">
+          <div className={`p-4 rounded-xl border shadow-2xl flex items-start gap-3 relative ${theme === 'dark' ? 'bg-slate-800 border-red-900/50' : 'bg-white border-red-200'}`}>
+            <div className="p-2 bg-red-100 rounded-full flex-shrink-0 text-red-600 mt-0.5">
+              <ICONS.X className="w-3 h-3" />
+            </div>
+            <div className="flex-1 min-w-0 pr-6">
+              <h4 className="text-xs font-bold text-red-600 uppercase tracking-wider mb-1">System Error</h4>
+              <p className={`text-xs break-words leading-relaxed max-h-48 overflow-y-auto no-scrollbar ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{state.error}</p>
+            </div>
+            <button 
+              onClick={() => setState(prev => ({ ...prev, error: null }))}
+              className={`absolute top-4 right-4 p-1.5 rounded-lg transition-colors ${theme === 'dark' ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-400 hover:bg-slate-100'}`}
+            >
+              <ICONS.X className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Universal Header */}
       <header className={`flex-shrink-0 px-4 sm:px-6 py-3 backdrop-blur-lg border-b ${theme === 'dark' ? 'bg-slate-800/60 border-slate-700' : 'bg-white/60 border-slate-200'} flex justify-between items-center z-20 transition-all`}>
         <button
@@ -338,10 +423,8 @@ const App: React.FC = () => {
             <span className={`text-xs font-bold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{state.user.name}</span>
             <span className="text-[10px] text-slate-400 uppercase tracking-widest">{state.user.role}</span>
           </div>
-          <div className={`hidden sm:flex w-9 h-9 rounded-full border ${theme === 'dark' ? 'border-slate-700 bg-slate-700' : 'border-slate-200 bg-slate-100'} overflow-hidden items-center justify-center flex-shrink-0`}>
-            {state.user.avatar
-              ? <img src={state.user.avatar} alt="avatar" className="w-full h-full object-cover" />
-              : <ICONS.Users className="w-5 h-5 text-slate-400" />}
+          <div className="flex items-center justify-center flex-shrink-0">
+            <UserButton afterSignOutUrl="/" appearance={{ elements: { userButtonAvatarBox: "w-9 h-9" } }} />
           </div>
           <div className="flex items-center gap-1">
             {/* Desktop: theme + logout */}
@@ -352,13 +435,7 @@ const App: React.FC = () => {
             >
               {theme === 'light' ? <ICONS.Moon className="w-4 h-4 sm:w-5 sm:h-5" /> : <ICONS.Sun className="w-4 h-4 sm:w-5 sm:h-5" />}
             </button>
-            <button 
-              onClick={handleLogout} 
-              className={`hidden sm:block p-1.5 sm:p-2 hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors rounded-lg`}
-              title="Logout"
-            >
-              <ICONS.LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
+
             {/* Mobile: hamburger */}
             <button 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
@@ -765,4 +842,15 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+export default function App() {
+  return (
+    <>
+      <SignedOut>
+        <LoginScreen />
+      </SignedOut>
+      <SignedIn>
+        <MainApp />
+      </SignedIn>
+    </>
+  );
+}
